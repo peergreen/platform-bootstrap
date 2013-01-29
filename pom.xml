@@ -26,6 +26,8 @@
   <artifactId>peergreen-bootstrap</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
+  <name>Peergreen Bootstrap</name>
+
   <scm>
     <connection>scm:git:https://forge.peergreen.com/git/git/platform/bootstrap.git</connection>
     <developerConnection>scm:git:https://forge.peergreen.com/git/git/platform/bootstrap.git</developerConnection>
