@@ -28,7 +28,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public class Bootstrap {
 
-    private static final String NAMESPACE = "com.peergreen.platform.bootstrap:";
+    private static final String NAMESPACE = "com.peergreen.bootstrap:";
 
     /**
      * Keep arguments of the bootstrap in order to send them to the delegating class.
@@ -72,7 +72,7 @@ public class Bootstrap {
 
         //FIXME: Allows to specify class to load
         // Class to load
-        String classname = "com.peergreen.platform.launcher.Platform";
+        String classname = "com.peergreen.kernel.launcher.Kernel";
 
         // Load delegating class
         Class<?> mainClass = null;
