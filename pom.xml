@@ -26,7 +26,6 @@
 
   <groupId>com.peergreen.bootstrap</groupId>
   <artifactId>peergreen-bootstrap</artifactId>
-  <packaging>jar</packaging>
   <version>1.0.0-SNAPSHOT</version>
 
   <dependencies>
