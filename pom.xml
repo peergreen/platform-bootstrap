@@ -28,6 +28,12 @@
   <artifactId>peergreen-bootstrap</artifactId>
   <version>1.0.0-SNAPSHOT</version>
 
+  <scm>
+    <connection>scm:git:https://forge.peergreen.com/git/git/platform/bootstrap.git</connection>
+    <developerConnection>scm:git:https://forge.peergreen.com/git/git/platform/bootstrap.git</developerConnection>
+    <url>https://forge.peergreen.com/git/summary/?r=platform/bootstrap.git</url>
+  </scm>
+
   <dependencies>
     <dependency>
       <groupId>org.testng</groupId>
