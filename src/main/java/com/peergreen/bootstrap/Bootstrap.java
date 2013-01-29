@@ -28,7 +28,7 @@ import java.security.PrivilegedExceptionAction;
  */
 public class Bootstrap {
 
-    private static final String NAMESPACE = "com.peergreen.platform.bootstrap:";
+    private static final String NAMESPACE = "com.peergreen.bootstrap:";
 
     /**
      * Keep arguments of the bootstrap in order to send them to the delegating class.
