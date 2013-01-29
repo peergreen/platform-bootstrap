@@ -63,7 +63,6 @@ public class Bootstrap {
         long t0 = System.currentTimeMillis();
         entriesRepository.scan();
         long tEnd = System.currentTimeMillis();
-        System.out.println("Time to scan entries : " + (tEnd - t0) + " ms");
         addBootstrapProperty("scan.begin", t0);
         addBootstrapProperty("scan.end", tEnd);
 
