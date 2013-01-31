@@ -108,4 +108,12 @@ public class InsideJarClassLoader extends SecureClassLoader {
         return entriesRepository;
     }
 
+    /**
+     * Allows to extends dynamically the classloading.
+     * @param url the URL to add.
+     */
+    protected void addURL(URL url) {
+
+    }
+
 }
