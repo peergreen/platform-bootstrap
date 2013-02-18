@@ -28,6 +28,8 @@ import java.util.Enumeration;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
+import static org.testng.Assert.assertEquals;
+
 public class TestClassLoader {
 
     /**
@@ -60,6 +62,10 @@ public class TestClassLoader {
         Class<?> myClass = insideJarClassLoader.loadClass("com.peergreen.test.MyClass");
         Assert.assertNotNull(myClass);
 
+        Package pack = myClass.getPackage();
+        Assert.assertNotNull(pack);
+        assertEquals(pack.getName(), "com.peergreen.test");
+
         // new instance
         Object myClassInstance = myClass.newInstance();
         Assert.assertNotNull(myClassInstance);
@@ -71,17 +77,17 @@ public class TestClassLoader {
         // invoke
         Object result = method.invoke(myClassInstance);
         Assert.assertNotNull(result);
-        Assert.assertEquals(result, 2503);
+        assertEquals(result, 2503);
 
 
         URL firstA = insideJarClassLoader.getResource("a.txt");
         Assert.assertNotNull(firstA);
-        Assert.assertEquals(firstA.getProtocol(), "jarinjar");
-        Assert.assertEquals(getBytes(firstA), "FirstA\n".getBytes(Charset.defaultCharset()));
+        assertEquals(firstA.getProtocol(), "jarinjar");
+        assertEquals(getBytes(firstA), "FirstA\n".getBytes(Charset.defaultCharset()));
 
         // Check content length
         URLConnection connection = firstA.openConnection();
-        Assert.assertEquals(connection.getContentLength(), 7);
+        assertEquals(connection.getContentLength(), 7);
 
 
 
@@ -91,13 +97,13 @@ public class TestClassLoader {
 
         Assert.assertNotNull(cAjar);
         Assert.assertTrue(cAjar.getPath().contains("a.jar"));
-        Assert.assertEquals(getBytes(cAjar), "FirstC\n".getBytes(Charset.defaultCharset()));
+        assertEquals(getBytes(cAjar), "FirstC\n".getBytes(Charset.defaultCharset()));
 
         URL cBjar = aList.nextElement();
         Assert.assertFalse(aList.hasMoreElements());
         Assert.assertNotNull(cBjar);
         Assert.assertTrue(cBjar.getPath().contains("b.jar"));
-        Assert.assertEquals(getBytes(cBjar), "SecondC\n".getBytes(Charset.defaultCharset()));
+        assertEquals(getBytes(cBjar), "SecondC\n".getBytes(Charset.defaultCharset()));
 
 
     }
