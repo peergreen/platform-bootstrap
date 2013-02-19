@@ -31,6 +31,13 @@ public class Bootstrap {
     private static final String NAMESPACE = "com.peergreen.bootstrap:";
 
     /**
+     * If this System property is set to {@literal true}, the Bootstrap will force JVM's shutdown
+     * with {@link System#exit(int)}.
+     * By default, {@literal exit()} is not called.
+     */
+    private static final String SYSTEM_EXIT_ENABLED_PROPERTY = "com.peergreen.bootstrap.system.exit";
+
+    /**
      * Keep arguments of the bootstrap in order to send them to the delegating class.
      */
     private final String[] args;
@@ -137,10 +144,24 @@ public class Bootstrap {
      * @param args the arguments of this bootstrap launcher
      */
     public static void main(String[] args) throws Exception {
+        boolean exception = false;
         addBootstrapProperty("begin", System.currentTimeMillis());
-        Bootstrap bootstrap = new Bootstrap(args);
-        bootstrap.start();
+        try {
+            Bootstrap bootstrap = new Bootstrap(args);
+            bootstrap.start();
+        } catch (BootstrapException e) {
+            e.printStackTrace(System.err);
+            exception = true;
+        } finally {
+            terminate(exception);
+        }
+    }
+
+    private static void terminate(boolean exception) {
         clearBootstrapProperties("begin", "scan.begin", "scan.end", "main.invoke");
+        if (Boolean.getBoolean(SYSTEM_EXIT_ENABLED_PROPERTY)) {
+            System.exit(exception ? -1 : 0);
+        }
     }
 
     private static void clearBootstrapProperties(String... keys) {
