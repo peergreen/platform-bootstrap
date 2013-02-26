@@ -50,12 +50,37 @@ public class Bootstrap {
         this.args = args;
     }
 
-
     /**
      * Starts the bootstrap by invoking the main method of the delegating class
      * @throws BootstrapException if there is a failure.
      */
     public void start() throws BootstrapException {
+        Class<?> mainClass = load();
+
+        // Gets main method
+        Method mainMethod = null;
+        try {
+            mainMethod = mainClass.getMethod("main",String[].class);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new BootstrapException("The delegating class '" + mainClass.getName() + "' to launch has no main(String[] args) method available.", e);
+        }
+
+        addBootstrapProperty("main.invoke", System.currentTimeMillis());
+        // Call main
+        try {
+            mainMethod.invoke(null, (Object) args);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new BootstrapException("Unable to call the main method of the delegating class '" + mainClass.getName() + "'.", e);
+        }
+
+
+    }
+
+    /**
+     * Starts the bootstrap by invoking the main method of the delegating class
+     * @throws BootstrapException if there is a failure.
+     */
+    public Class<?> load() throws BootstrapException {
 
         // Gets the location of the jar containing this class
         URL url = getLocation();
@@ -81,29 +106,11 @@ public class Bootstrap {
         String classname = "com.peergreen.kernel.launcher.Kernel";
 
         // Load delegating class
-        Class<?> mainClass = null;
         try {
-            mainClass = classLoader.loadClass(classname);
+            return classLoader.loadClass(classname);
         } catch (ClassNotFoundException e) {
             throw new BootstrapException("Unable to load the class '" + classname + "'.", e);
         }
-
-        // Gets main method
-        Method mainMethod = null;
-        try {
-            mainMethod = mainClass.getMethod("main",String[].class);
-        } catch (NoSuchMethodException | SecurityException e) {
-            throw new BootstrapException("The delegating class '" + classname + "' to launch has no main(String[] args) method available.", e);
-        }
-
-        addBootstrapProperty("main.invoke", tEnd);
-        // Call main
-        try {
-            mainMethod.invoke(null, (Object) args);
-        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-            throw new BootstrapException("Unable to call the main method of the delegating class '" + classname + "'.", e);
-        }
-
     }
 
     /**
@@ -147,7 +154,7 @@ public class Bootstrap {
         boolean exception = false;
         addBootstrapProperty("begin", System.currentTimeMillis());
         try {
-            Bootstrap bootstrap = new Bootstrap(args);
+            Bootstrap bootstrap = newBootstrap(args);
             bootstrap.start();
         } catch (BootstrapException e) {
             e.printStackTrace(System.err);
@@ -176,6 +183,12 @@ public class Bootstrap {
 
     private static void addBootstrapProperty(String key, String value) {
         System.setProperty(NAMESPACE + key, value);
+    }
+
+
+    public static Bootstrap newBootstrap(String[] args) {
+        Bootstrap bootstrap = new Bootstrap(args);
+        return bootstrap;
     }
 
 }
