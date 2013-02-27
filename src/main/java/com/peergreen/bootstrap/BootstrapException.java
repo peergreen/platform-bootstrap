@@ -31,7 +31,7 @@ public class BootstrapException extends Exception {
      * @param message the expected message
      * @param e the given exception
      */
-    public BootstrapException(String message, Exception e) {
+    public BootstrapException(String message, Throwable e) {
         super(message, e);
     }
 }

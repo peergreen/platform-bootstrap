@@ -15,6 +15,7 @@
  */
 package com.peergreen.bootstrap;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -89,7 +90,21 @@ public class Bootstrap {
         EntriesRepository entriesRepository = new EntriesRepository(url);
 
         // Register our URL factory
-        URL.setURLStreamHandlerFactory(new BootstrapURLStreamHandlerFactory(entriesRepository));
+        try {
+            URL.setURLStreamHandlerFactory(new BootstrapURLStreamHandlerFactory(entriesRepository));
+        } catch (Error e) {
+            // already set so reset field
+
+            // try to reset field
+            try {
+                Field f = URL.class.getDeclaredField("factory");
+                f.setAccessible(true);
+                f.set(null,  null);
+                URL.setURLStreamHandlerFactory(new BootstrapURLStreamHandlerFactory(entriesRepository));
+            } catch (Error | IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException error) {
+                throw new BootstrapException("Unable to set the URL Stream handler factory", error);
+            }
+        }
 
         // Scan entries
         long t0 = System.currentTimeMillis();
