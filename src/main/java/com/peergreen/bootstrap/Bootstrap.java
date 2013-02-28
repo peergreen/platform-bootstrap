@@ -22,6 +22,7 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Set;
 
 /**
  * Bootstrap class used to load delegating class.
@@ -39,9 +40,20 @@ public class Bootstrap {
     private static final String SYSTEM_EXIT_ENABLED_PROPERTY = "com.peergreen.bootstrap.system.exit";
 
     /**
+     * If this System property is set to {@literal true}, the Bootstrap will only print a report on remaining thread when bootstap start() method is done.
+     * if false, stop of these threads is performed.
+     */
+    private static final String ONLY_REPORTING_REMAINING_THREADS_ON_STOP = "com.peergreen.bootstrap.thread.check.reportonly";
+
+    /**
      * Keep arguments of the bootstrap in order to send them to the delegating class.
      */
     private final String[] args;
+
+    /**
+     * ClassLoader built in order to load sub-jars.
+     */
+    private ClassLoader classLoader;
 
     /**
      * No public constructor as it's only used by this class.
@@ -67,11 +79,15 @@ public class Bootstrap {
         }
 
         addBootstrapProperty("main.invoke", System.currentTimeMillis());
+        ClassLoader old = Thread.currentThread().getContextClassLoader();
+        Thread.currentThread().setContextClassLoader(classLoader);
         // Call main
         try {
             mainMethod.invoke(null, (Object) args);
         } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
             throw new BootstrapException("Unable to call the main method of the delegating class '" + mainClass.getName() + "'.", e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(old);
         }
 
 
@@ -114,7 +130,7 @@ public class Bootstrap {
         addBootstrapProperty("scan.end", tEnd);
 
         // Create classloader with embedded jars
-        ClassLoader classLoader = getClassLoader(entriesRepository);
+        this.classLoader = getClassLoader(entriesRepository);
 
         //FIXME: Allows to specify class to load
         // Class to load
@@ -168,23 +184,64 @@ public class Bootstrap {
     public static void main(String[] args) throws Exception {
         boolean exception = false;
         addBootstrapProperty("begin", System.currentTimeMillis());
+        Bootstrap bootstrap = newBootstrap(args);
         try {
-            Bootstrap bootstrap = newBootstrap(args);
             bootstrap.start();
         } catch (BootstrapException e) {
             e.printStackTrace(System.err);
             exception = true;
         } finally {
-            terminate(exception);
+            bootstrap.terminate(exception);
         }
     }
 
-    private static void terminate(boolean exception) {
+    @SuppressWarnings("deprecation")
+    private void terminate(boolean exception) {
         clearBootstrapProperties("begin", "scan.begin", "scan.end", "main.invoke");
+
+        // Get threads
+        Set<Thread> threads = Thread.getAllStackTraces().keySet();
+        if (threads != null) {
+            for (Thread thread : threads) {
+
+                if (isChildCreatedThread(thread) && !thread.isDaemon()) {
+                    boolean onlyReporting = Boolean.getBoolean(ONLY_REPORTING_REMAINING_THREADS_ON_STOP);
+                    System.err.println(String.format("WARN: The thread '%s' is not a daemon thread and is still running.", thread.getName()));
+                    if (!onlyReporting) {
+                        System.err.println(String.format("WARN: Stopping thread '%s' for a clean shutdown of the bootstrap. Add System.property -D%s=true for only printing the report on remaining threads.", thread.getName(), ONLY_REPORTING_REMAINING_THREADS_ON_STOP));
+                        thread.stop();
+                    }
+                }
+            }
+        }
+
         if (Boolean.getBoolean(SYSTEM_EXIT_ENABLED_PROPERTY)) {
             System.exit(exception ? -1 : 0);
         }
+
     }
+
+    /**
+     * Check if the given thread has been created by a child classloader.
+     * @param thread the thread to check
+     * @return true if the thread is a child thread
+     */
+    private boolean isChildCreatedThread(Thread thread) {
+        if (classLoader == null) {
+            return false;
+        }
+        ClassLoader cl = thread.getContextClassLoader();
+        while (cl != null) {
+            cl = cl.getParent();
+            // matching classloader
+            if (classLoader.equals(cl)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
     private static void clearBootstrapProperties(String... keys) {
         for (String key : keys) {
